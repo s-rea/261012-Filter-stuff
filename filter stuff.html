@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Start Stop Fun</title>
+  </head>
+  <body>
+    <script>
+      const ctx = new AudioContext();
+
+      const mainOsc = new OscillatorNode(ctx);
+      mainOsc.type = "sawtooth";
+      mainOsc.frequency.value = 55;
+
+      const lpFilter = new BiquadFilterNode(ctx);
+      lpFilter.type = "lowpass";
+      lpFilter.frequency = 200;
+      lpFilter.Q = 8;
+
+      const lfo = new OscillatorNode(ctx);
+      lfo.type = "sine";
+      lfo.frequency.value = 6;
+
+      const lfoDepth = ctx.createGain();
+      lfoDepth.gain.setValueAtTime(500, ctx.currentTime);
+
+      lfo.connect(lfoDepth);
+      lfoDepth.connect(lpFilter.frequency);
+
+      mainOsc.connect(lpFilter);
+      lpFilter.connect(ctx.destination);
+
+      mainOsc.start();
+      lfo.start();
+    </script>
+  </body>
+</html>
