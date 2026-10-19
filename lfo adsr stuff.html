@@ -8,6 +8,7 @@
     <button id="Start1">Start1</button>
     <button id="Start2">Start2</button>
     <button id="Start3">Start3</button>
+    <button id="Start4">Start4</button>
     <input
       id="freq1"
       type="range"
@@ -56,6 +57,22 @@
       step="0.001"
       value="3"
     /><label id="Rate_Display3">Rate_Range3</label>
+    <input
+      id="freq4"
+      type="range"
+      min="1"
+      max="40"
+      step="0.1"
+      value="0.1"
+    /><label id="CutOff_Display4">CutOff_Range4</label>
+    <input
+      id="rate4"
+      type="range"
+      min="0.125"
+      max="10"
+      step="0.001"
+      value="3"
+    /><label id="Rate_Display4">Rate_Range4</label>
     <script>
       //adsr swell 1
       const adsrSwell1 = function () {
@@ -91,6 +108,18 @@
         adsr3.gain.setValueAtTime(0, now);
         adsr3.gain.linearRampToValueAtTime(1, now + 1.5);
         adsr3.gain.exponentialRampToValueAtTime(0.0001, now + 5);
+      };
+
+      //adsr swell 4
+      const adsrSwell4 = function () {
+        mainOsc4.frequency.value = Math.random() * 200 + 100;
+        ctx4.resume();
+
+        let now = ctx4.currentTime;
+
+        adsr4.gain.setValueAtTime(0, now);
+        adsr4.gain.linearRampToValueAtTime(1, now + 1.5);
+        adsr4.gain.exponentialRampToValueAtTime(0.0001, now + 5);
       };
 
       // 1
@@ -195,6 +224,40 @@
       mainOsc3.start();
       lfo3.start();
 
+      //4
+      const ctx4 = new AudioContext();
+
+      const mainOsc4 = new OscillatorNode(ctx4);
+      mainOsc4.type = "sawtooth";
+
+      const lpFilter4 = new BiquadFilterNode(ctx4);
+      lpFilter4.type = "lowpass";
+      lpFilter4.frequency = 200; // Base cutoff frequency
+      lpFilter4.Q = 8; // Add resonance for a more noticeable sweep
+
+      const lfo4 = new OscillatorNode(ctx4);
+      lfo4.type = "square";
+      lfo4.frequency.value = 6;
+
+      const lfo4Depth = new GainNode(ctx4);
+      lfo4Depth.gain.value = 10000;
+
+      lfo4.connect(lfo4Depth);
+      lfo4Depth.connect(lpFilter4.frequency); // Target the filter's frequency parameter
+
+      const adsr4 = new GainNode(ctx4);
+      adsr4.gain.value = 0;
+
+      const master4 = new GainNode(ctx4);
+
+      mainOsc4.connect(lpFilter4);
+      lpFilter4.connect(adsr4);
+      adsr4.connect(master4);
+      master4.connect(ctx4.destination);
+
+      mainOsc4.start();
+      lfo4.start();
+
       const slider1 = document.querySelector("#freq1");
       slider1.addEventListener("input", () => {
         ctx.resume();
@@ -231,14 +294,28 @@
         lfo3.frequency.value = Number(slider6.value);
         document.querySelector("#Rate_Display3").textContent = slider6.value;
       });
+      const slider7 = document.querySelector("#freq4");
+      slider7.addEventListener("input", () => {
+        ctx4.resume();
+        lfo4Depth.gain.value = 100 * Number(slider7.value);
+        document.querySelector("#CutOff_Display4").textContent = slider7.value;
+      });
+      const slider8 = document.querySelector("#rate4");
+      slider8.addEventListener("input", () => {
+        ctx4.resume();
+        lfo4.frequency.value = Number(slider8.value);
+        document.querySelector("#Rate_Display4").textContent = slider8.value;
+      });
 
       const theClickButton1 = document.querySelector("#Start1");
       const theClickButton2 = document.querySelector("#Start2");
       const theClickButton3 = document.querySelector("#Start3");
+      const theClickButton4 = document.querySelector("#Start4");
 
       theClickButton1.addEventListener("click", adsrSwell1);
       theClickButton2.addEventListener("click", adsrSwell2);
       theClickButton3.addEventListener("click", adsrSwell3);
+      theClickButton4.addEventListener("click", adsrSwell4);
     </script>
   </body>
 </html>
