@@ -7,22 +7,39 @@
   <body>
     <button id="Start1">Start1</button>
     <button id="Start2">Start2</button>
+    <button id="Start3">Start3</button>
     <input
-      id="freq"
+      id="freq1"
       type="range"
       min="1"
       max="40"
       step="0.1"
       value="0.1"
-    /><label id="CutOff_Display">CutOff_Range</label>
+    /><label id="CutOff_Display1">CutOff_Range</label>
     <input
-      id="rate"
+      id="rate1"
       type="range"
       min="0.125"
       max="10"
       step="0.001"
       value="3"
-    /><label id="Rate_Display">Rate_Range</label>
+    /><label id="Rate_Display1">Rate_Range1</label>
+    <input
+      id="freq2"
+      type="range"
+      min="1"
+      max="40"
+      step="0.1"
+      value="0.1"
+    /><label id="CutOff_Display2">CutOff_Range2</label>
+    <input
+      id="rate2"
+      type="range"
+      min="0.125"
+      max="10"
+      step="0.001"
+      value="3"
+    /><label id="Rate_Display2">Rate_Range2</label>
     <script>
       //adsr swell 1
       const adsrSwell1 = function () {
@@ -40,12 +57,12 @@
       //adsr swell 2
       const adsrSwell2 = function () {
         mainOsc2.frequency.value = Math.random() * 200 + 100;
-        ctx.resume();
+        ctx2.resume();
 
-        let now = ctx.currentTime;
-        adsr.gain.setValueAtTime(0, now);
-        adsr.gain.linearRampToValueAtTime(1, now + 1.5);
-        adsr.gain.exponentialRampToValueAtTime(0.0001, now + 5);
+        let now = ctx2.currentTime;
+        adsr2.gain.setValueAtTime(0, now);
+        adsr2.gain.linearRampToValueAtTime(1, now + 1.5);
+        adsr2.gain.exponentialRampToValueAtTime(0.0001, now + 5);
       };
 
       //adsr swell 3
@@ -60,29 +77,24 @@
         adsr.gain.exponentialRampToValueAtTime(0.0001, now + 5);
       };
 
-      // 1. Initialize the Audio Context
+      // 1
       const ctx = new AudioContext();
 
-      // 2. Create the main audio source (e.g., a sawtooth wave)
       const mainOsc1 = new OscillatorNode(ctx);
       mainOsc1.type = "sawtooth";
 
-      // 3. Create the Low-Pass Filter
       const lpFilter1 = new BiquadFilterNode(ctx);
       lpFilter1.type = "lowpass";
       lpFilter1.frequency = 200; // Base cutoff frequency
       lpFilter1.Q = 8; // Add resonance for a more noticeable sweep
 
-      // 4. Create the LFO (Low Frequency Oscillator)
       const lfo1 = new OscillatorNode(ctx);
       lfo1.type = "square";
-      lfo1.frequency.value = 6; // Speed of modulation (3 Hz / 3 times per second)
+      lfo1.frequency.value = 6;
 
-      // 5. Create the LFO Gain Node to control modulation depth
       const lfo1Depth = new GainNode(ctx);
       lfo1Depth.gain.value = 10000;
 
-      // 6. Connect the modulation graph
       lfo1.connect(lfo1Depth);
       lfo1Depth.connect(lpFilter1.frequency); // Target the filter's frequency parameter
 
@@ -91,36 +103,80 @@
 
       const master = new GainNode(ctx);
 
-      // 7. Connect the main audio signal path
       mainOsc1.connect(lpFilter1);
       lpFilter1.connect(adsr);
       adsr.connect(master);
       master.connect(ctx.destination);
 
-      // 8. Start both oscillators
       mainOsc1.start();
       lfo1.start();
 
-      const slider1 = document.querySelector("#freq");
+      //2
+      const ctx2 = new AudioContext();
+
+      const mainOsc2 = new OscillatorNode(ctx2);
+      mainOsc2.type = "sawtooth";
+
+      const lpFilter2 = new BiquadFilterNode(ctx2);
+      lpFilter2.type = "lowpass";
+      lpFilter2.frequency = 200; // Base cutoff frequency
+      lpFilter2.Q = 8; // Add resonance for a more noticeable sweep
+
+      const lfo2 = new OscillatorNode(ctx2);
+      lfo2.type = "square";
+      lfo2.frequency.value = 6;
+
+      const lfo2Depth = new GainNode(ctx2);
+      lfo2Depth.gain.value = 10000;
+
+      lfo2.connect(lfo2Depth);
+      lfo2Depth.connect(lpFilter2.frequency); // Target the filter's frequency parameter
+
+      const adsr2 = new GainNode(ctx2);
+      adsr2.gain.value = 0;
+
+      const master2 = new GainNode(ctx2);
+
+      mainOsc2.connect(lpFilter2);
+      lpFilter2.connect(adsr2);
+      adsr2.connect(master2);
+      master2.connect(ctx2.destination);
+
+      mainOsc2.start();
+      lfo2.start();
+
+      const slider1 = document.querySelector("#freq1");
       slider1.addEventListener("input", () => {
         ctx.resume();
         lfo1Depth.gain.value = 100 * Number(slider1.value);
-        document.querySelector("#CutOff_Display").textContent = slider1.value;
+        document.querySelector("#CutOff_Display1").textContent = slider1.value;
       });
-      const slider2 = document.querySelector("#rate");
+      const slider2 = document.querySelector("#rate1");
       slider2.addEventListener("input", () => {
         ctx.resume();
         lfo1.frequency.value = Number(slider2.value);
-        document.querySelector("#Rate_Display").textContent = slider2.value;
+        document.querySelector("#Rate_Display1").textContent = slider2.value;
+      });
+      const slider3 = document.querySelector("#freq2");
+      slider3.addEventListener("input", () => {
+        ctx2.resume();
+        lfo2Depth.gain.value = 100 * Number(slider3.value);
+        document.querySelector("#CutOff_Display2").textContent = slider3.value;
+      });
+      const slider4 = document.querySelector("#rate2");
+      slider4.addEventListener("input", () => {
+        ctx2.resume();
+        lfo2.frequency.value = Number(slider4.value);
+        document.querySelector("#Rate_Display2").textContent = slider4.value;
       });
 
-      const theClickButton = document.querySelector("#Start1");
+      const theClickButton1 = document.querySelector("#Start1");
       const theClickButton2 = document.querySelector("#Start2");
       const theClickButton3 = document.querySelector("#Start3");
 
-      theClickButton.addEventListener("click", adsrSwell1);
-      theClickButton.addEventListener("click", adsrSwell2);
-      theClickButton.addEventListener("click", adsrSwell3);
+      theClickButton1.addEventListener("click", adsrSwell1);
+      theClickButton2.addEventListener("click", adsrSwell2);
+      theClickButton3.addEventListener("click", adsrSwell3);
     </script>
   </body>
 </html>
