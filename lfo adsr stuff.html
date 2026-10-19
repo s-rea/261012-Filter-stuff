@@ -40,6 +40,22 @@
       step="0.001"
       value="3"
     /><label id="Rate_Display2">Rate_Range2</label>
+    <input
+      id="freq3"
+      type="range"
+      min="1"
+      max="40"
+      step="0.1"
+      value="0.1"
+    /><label id="CutOff_Display3">CutOff_Range3</label>
+    <input
+      id="rate3"
+      type="range"
+      min="0.125"
+      max="10"
+      step="0.001"
+      value="3"
+    /><label id="Rate_Display3">Rate_Range3</label>
     <script>
       //adsr swell 1
       const adsrSwell1 = function () {
@@ -67,14 +83,14 @@
 
       //adsr swell 3
       const adsrSwell3 = function () {
-        mainOsc3.frequency.value = Math.Random() * 200 + 100;
+        mainOsc3.frequency.value = Math.random() * 200 + 100;
+        ctx3.resume();
 
-        ctx.resume();
-        let now = ctx.currentTime;
+        let now = ctx3.currentTime;
 
-        adsr.gain.setValueAtTime(0, now);
-        adsr.gain.linearRampToValueAtTime(1, now + 1.5);
-        adsr.gain.exponentialRampToValueAtTime(0.0001, now + 5);
+        adsr3.gain.setValueAtTime(0, now);
+        adsr3.gain.linearRampToValueAtTime(1, now + 1.5);
+        adsr3.gain.exponentialRampToValueAtTime(0.0001, now + 5);
       };
 
       // 1
@@ -145,6 +161,40 @@
       mainOsc2.start();
       lfo2.start();
 
+      //3
+      const ctx3 = new AudioContext();
+
+      const mainOsc3 = new OscillatorNode(ctx3);
+      mainOsc3.type = "sawtooth";
+
+      const lpFilter3 = new BiquadFilterNode(ctx3);
+      lpFilter3.type = "lowpass";
+      lpFilter3.frequency = 200; // Base cutoff frequency
+      lpFilter3.Q = 8; // Add resonance for a more noticeable sweep
+
+      const lfo3 = new OscillatorNode(ctx3);
+      lfo3.type = "square";
+      lfo3.frequency.value = 6;
+
+      const lfo3Depth = new GainNode(ctx3);
+      lfo3Depth.gain.value = 10000;
+
+      lfo3.connect(lfo3Depth);
+      lfo3Depth.connect(lpFilter3.frequency); // Target the filter's frequency parameter
+
+      const adsr3 = new GainNode(ctx3);
+      adsr3.gain.value = 0;
+
+      const master3 = new GainNode(ctx3);
+
+      mainOsc3.connect(lpFilter3);
+      lpFilter3.connect(adsr3);
+      adsr3.connect(master3);
+      master3.connect(ctx3.destination);
+
+      mainOsc3.start();
+      lfo3.start();
+
       const slider1 = document.querySelector("#freq1");
       slider1.addEventListener("input", () => {
         ctx.resume();
@@ -168,6 +218,18 @@
         ctx2.resume();
         lfo2.frequency.value = Number(slider4.value);
         document.querySelector("#Rate_Display2").textContent = slider4.value;
+      });
+      const slider5 = document.querySelector("#freq3");
+      slider5.addEventListener("input", () => {
+        ctx3.resume();
+        lfo3Depth.gain.value = 100 * Number(slider5.value);
+        document.querySelector("#CutOff_Display3").textContent = slider5.value;
+      });
+      const slider6 = document.querySelector("#rate3");
+      slider6.addEventListener("input", () => {
+        ctx3.resume();
+        lfo3.frequency.value = Number(slider6.value);
+        document.querySelector("#Rate_Display3").textContent = slider6.value;
       });
 
       const theClickButton1 = document.querySelector("#Start1");
